@@ -17,21 +17,18 @@ body {
   background: black;
 }
 
-/* SECCIONES */
 section {
   height: 100vh;
   position: relative;
   overflow: hidden;
 }
 
-/* VIDEO */
 video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* OVERLAY */
 #overlay {
   position: fixed;
   width: 100%;
@@ -55,7 +52,6 @@ video {
   color: white;
 }
 
-/* BOTONES */
 .botones {
   position: absolute;
   top: 53%;
@@ -134,7 +130,7 @@ const videos = document.querySelectorAll("video");
 let currentVideo = null;
 let played = new Set();
 
-// 🔥 preparar video para iPhone
+// 🔥 compatibilidad total iPhone
 function prepareVideo(video){
   video.muted = true;
   video.setAttribute("muted", "");
@@ -166,6 +162,16 @@ function playVideo(video) {
   video.play().catch(()=>{});
 }
 
+// 🔥 precargar videos (clave)
+function preloadNextVideos() {
+  document.querySelectorAll(".video").forEach(video => {
+    if (!video.src) {
+      video.src = video.dataset.src;
+      prepareVideo(video);
+    }
+  });
+}
+
 // CLICK INICIAL
 pergamino.addEventListener("click", () => {
   overlay.style.display = "none";
@@ -175,9 +181,11 @@ pergamino.addEventListener("click", () => {
   video1.src = "pergamino.mp4";
   prepareVideo(video1);
   playVideo(video1);
+
+  preloadNextVideos(); // 🔥 SOLUCIÓN CLAVE
 });
 
-// OBSERVER
+// 🔥 observer mejorado
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     const video = entry.target;
@@ -186,16 +194,28 @@ const observer = new IntersectionObserver(entries => {
       playVideo(video);
     }
   });
-}, { threshold: 0.6 });
+}, {
+  threshold: 0.2,
+  rootMargin: "0px 0px -100px 0px"
+});
 
 // iniciar observer
 videos.forEach(video => {
   prepareVideo(video);
-
   observer.observe(video);
 
   video.addEventListener("ended", () => {
     played.add(video);
+  });
+});
+
+// 🔥 refuerzo extra para iPhone (scroll)
+window.addEventListener("scroll", () => {
+  videos.forEach(video => {
+    const rect = video.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.8 && rect.bottom > 0) {
+      playVideo(video);
+    }
   });
 });
 </script>
